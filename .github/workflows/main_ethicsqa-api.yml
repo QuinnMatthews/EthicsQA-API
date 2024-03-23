@@ -18,6 +18,8 @@ jobs:
     runs-on: windows-latest
     permissions:
       id-token: write #This is required for requesting the JWT
+      pull-requests: write
+      contents: read
 
     steps:
       - name: 'Checkout GitHub Action'
