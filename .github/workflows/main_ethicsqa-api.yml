@@ -16,11 +16,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: windows-latest
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      pull-requests: write
-      contents: read
-
+    
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
@@ -37,13 +33,6 @@ jobs:
           dotnet build --configuration Release --output ./output
           popd
       
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4BD8430C162D42A7AE41CFDCCDCE619E }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F5EB54ECAB254DEF8227E4536E471789 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_12ACAC7D7F194EC18927A316AA699413 }}
-
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
         id: fa
@@ -51,4 +40,4 @@ jobs:
           app-name: 'EthicsQA-API'
           slot-name: 'Production'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_770D96B2FF9D4BBAB2DD61FCF5B898D6 }}
