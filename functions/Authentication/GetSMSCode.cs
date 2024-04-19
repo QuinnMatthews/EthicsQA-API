@@ -22,6 +22,18 @@ namespace EthicsQA.API
             _configuration = configuration.Value;
         }
 
+        /*
+        * Function to generate and send a 6-digit SMS code to a phone number
+        * 
+        * Request body:
+        * {
+        *     "Phone": "+15555555555"
+        * }
+        *
+        * Response:
+        * "SMS code sent to +15555555555"
+        */
+
         [Function("GetSMSCode")]
         public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req)
         {

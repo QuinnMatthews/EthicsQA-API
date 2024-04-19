@@ -25,6 +25,21 @@ namespace EthicsQA.API
             _configuration = options.Value;
         }
 
+        /*
+        * Function to exchange a 6-digit SMS code for an access token
+        *
+        * Request body:
+        * {
+        *     "Phone": "+15555555555",
+        *     "Code": "123456"
+        * }
+        *
+        * Response:
+        * {
+        *     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2JpbGVQaG9uZSI6IisxNTU1NTU1NTU1NTU1NSJ9.8
+        * }
+        */
+
         [Function("ExchangeCode")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req

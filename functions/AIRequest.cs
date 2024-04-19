@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using OpenAI.Net;
 
 namespace EthicsQA.API
@@ -32,38 +33,51 @@ namespace EthicsQA.API
         {
             _logger.LogInformation("Processing AI request.");
 
-            //TODO Handle User Authentication/authorization
-
-            // Validate stance parameter
-            if (!req.Query.ContainsKey("stance"))
+            // Validate phone number parameter from request post data
+            if (!(req.ContentType == "application/json"))
             {
-                return new BadRequestObjectResult("Please pass a stance on the query string");
+                return new BadRequestObjectResult("Request must be in JSON format");
             }
 
-            if (!Enum.TryParse<Stance>(req.Query["stance"], true, out var stance))
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            if (string.IsNullOrEmpty(requestBody))
+            {
+                return new BadRequestObjectResult("Please pass a question in the request body");
+            }
+
+            RequestData requestData;
+
+            try {
+                requestData = JsonConvert.DeserializeObject<RequestData>(requestBody,
+                new JsonSerializerSettings { 
+                    MissingMemberHandling = MissingMemberHandling.Error,
+                    EqualityComparer = StringComparer.OrdinalIgnoreCase,
+                }) ?? throw new JsonSerializationException();
+            } catch {
+                return new BadRequestObjectResult("Error parsing request body.");
+            }
+
+            string question = requestData.Question;
+            string _stance = requestData.Stance;
+
+
+            // Validate stance parameter
+            if (!Enum.TryParse<Stance>(_stance, true, out var stance))
             {
                 return new BadRequestObjectResult(
                     "Invalid stance. Please pass a valid stance on the query string"
                 );
             }
 
-            // Validate scenario parameter
-            if (!req.Query.ContainsKey("scenario"))
-            {
-                return new BadRequestObjectResult("Please pass a scenario on the query string");
-            }
-
-            string scenario = req.Query["scenario"]!;
-
             // Generate messages
             string stanceMsg = stance switch
             {
                 Stance.Pro
-                    => "You will respond only with ethical implications that are in favor of the given scenario.",
+                    => "You will respond only with ethical implications that are in favor of the given question or scenario.",
                 Stance.Con
-                    => "You will respond only with ethical implications that are against the given scenario.",
+                    => "You will respond only with ethical implications that are against the given question or scenario.",
                 Stance.Neutral
-                    => "You will respond with ethical implications that are both in favor and against the given scenario.",
+                    => "You will respond with ethical implications that are both in favor and against the given question or scenario.",
                 _ => throw new NotImplementedException()
             };
 
@@ -71,10 +85,10 @@ namespace EthicsQA.API
             {
                 Message.Create(
                     ChatRoleType.System,
-                    "You are a helpful assistant that evaluates the ethical implications of a given scenario. "
+                    "You are a helpful assistant that evaluates the ethical issues surrounding a given question or scenario. "
                         + stanceMsg
                 ),
-                Message.Create(ChatRoleType.User, scenario),
+                Message.Create(ChatRoleType.User, question),
             };
 
             // Get AI response
@@ -88,6 +102,12 @@ namespace EthicsQA.API
             );
 
             return new OkObjectResult(AIResp);
+        }
+
+        class RequestData
+        {
+            public required string Question { get; set; }
+            public required string Stance { get; set; }
         }
 
         enum Stance
