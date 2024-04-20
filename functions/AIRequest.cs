@@ -29,7 +29,7 @@ namespace EthicsQA.API
         }
 
         [Function("AIRequest")]
-        public async Task<IActionResult> Run([HttpTrigger("get")] HttpRequest req)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req)
         {
             _logger.LogInformation("Processing AI request.");
 
