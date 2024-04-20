@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using EthicsQA.API;
 using OpenAI.Net;
+using Microsoft.Extensions.Logging;
 
 var builder = new HostBuilder();
 
@@ -33,6 +34,17 @@ builder.ConfigureFunctionsWebApplication(builder => {
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(services.BuildServiceProvider().GetService<IOptions<Configuration>>()!.Value.JWT_Secret))
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            // Log any authentication failures
+            OnAuthenticationFailed = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerHandler>>();
+                logger.LogError(context.Exception, "Authentication failed.");
+                return Task.CompletedTask;
+            }
         };
     });
 });
