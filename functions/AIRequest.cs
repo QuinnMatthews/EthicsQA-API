@@ -73,11 +73,11 @@ namespace EthicsQA.API
             string stanceMsg = stance switch
             {
                 Stance.Pro
-                    => "You will respond only with ethical implications that are in favor of the given question or scenario.",
+                    => "You will respond only with ethical implications that are in favor of the given question or scenario. ",
                 Stance.Con
-                    => "You will respond only with ethical implications that are against the given question or scenario.",
+                    => "You will respond only with ethical implications that are against the given question or scenario. ",
                 Stance.Neutral
-                    => "You will respond with ethical implications that are both in favor and against the given question or scenario.",
+                    => "You will respond with ethical implications that are both in favor and against the given question or scenario. ",
                 _ => throw new NotImplementedException()
             };
 
@@ -87,6 +87,7 @@ namespace EthicsQA.API
                     ChatRoleType.System,
                     "You are a helpful assistant that evaluates the ethical issues surrounding a given question or scenario. "
                         + stanceMsg
+                        + "You should provide a short response that is relevant to the question or scenario."
                 ),
                 Message.Create(ChatRoleType.User, question),
             };
